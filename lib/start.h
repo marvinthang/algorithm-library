@@ -42,7 +42,7 @@ template <typename T> struct Vec<T, 1>: public vector<T>{ Vec(int n = 0, const T
 }
 
 void process(void) {
-	$0
+	
 }
 
 int main(void) {
