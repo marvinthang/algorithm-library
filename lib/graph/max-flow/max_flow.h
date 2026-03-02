@@ -6,30 +6,29 @@ template <class T> struct Edge {
     Edge(int from = 0, int to = 0, T cap = 0, int nxt = -1): from(from), to(to), cap(cap), flow(0), nxt(nxt) {}
 };
 
-template<class T>
 struct PushRelabel {
     struct Edge {
         int to, id;
-        T f, c;
-        Edge(int to, int id, T f, T c): to(to), id(id), f(f), c(c) {}
+        long long f, c;
+        Edge(int to, int id, long long f, long long c): to(to), id(id), f(f), c(c) {}
     };
     vector<vector<Edge>> g;
-    vector<T> ec;
+    vector<long long> ec;
     vector<Edge*> cur;
     vector<vector<int>> hs; vector<int> H;
     PushRelabel(int n) : g(n), ec(n), cur(n), hs(2*n), H(n) {}
-    void add(int s, int t, T cap, T rcap=0) {
+    void add(int s, int t, long long cap, long long rcap=0) {
         if (s == t) return;
         g[s].emplace_back(t, (int)g[t].size(), 0, cap);
         g[t].emplace_back(s, (int)g[s].size()-1, 0, rcap);
     }
-    void addFlow(Edge& e, T f) {
+    void addFlow(Edge& e, long long f) {
         Edge &back = g[e.to][e.id];
         if (!ec[e.to] && f) hs[H[e.to]].push_back(e.to);
         e.f += f; e.c -= f; ec[e.to] += f;
         back.f -= f; back.c += f; ec[back.to] -= f;
     }
-    T max_flow(int s, int t) {
+    long long max_flow(int s, int t) {
         int v = g.size(); H[s] = v; ec[t] = 1;
         vector<int> co(2*v); co[0] = v-1;
         for (int i = 0; i < v; ++i) cur[i] = g[i].data();
