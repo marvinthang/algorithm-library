@@ -5,77 +5,55 @@ template <class T> struct Edge {
     int nxt;
     Edge(int from = 0, int to = 0, T cap = 0, int nxt = -1): from(from), to(to), cap(cap), flow(0), nxt(nxt) {}
 };
-template <class T> struct PushRelabel {
-    int n, max_level;
-    vector <Edge <T>> edges;
-    vector <vector <int>> lst;
-    vector <int> head, level, cnt;
-    vector <T> excess;
-    vector <bool> active;
-    PushRelabel(int n = 0): n(n), lst(n), head(n, -1), level(n), cnt(n + 1), excess(n), active(n) {}
-    int add(int from, int to, T cap, bool bi = false) {
-        int id = edges.size();
-        edges.emplace_back(from, to, cap, head[from]);
-        head[from] = id;
-        edges.emplace_back(to, from, bi ? cap : 0, head[to]);
-        head[to] = id + 1;
-        return id;
+
+template<class T>
+struct PushRelabel {
+    struct Edge {
+        int to, id;
+        T f, c;
+        Edge(int to, int id, T f, T c): to(to), id(id), f(f), c(c) {}
+    };
+    vector<vector<Edge>> g;
+    vector<T> ec;
+    vector<Edge*> cur;
+    vector<vector<int>> hs; vector<int> H;
+    PushRelabel(int n) : g(n), ec(n), cur(n), hs(2*n), H(n) {}
+    void add(int s, int t, T cap, T rcap=0) {
+        if (s == t) return;
+        g[s].emplace_back(t, (int)g[t].size(), 0, cap);
+        g[t].emplace_back(s, (int)g[s].size()-1, 0, rcap);
     }
-    void enqueue(int u) {
-        if (!active[u] && excess[u] && level[u] < n) {
-            active[u] = true;
-            lst[level[u]].push_back(u);
-            max_level = max(max_level, level[u]);
-        }
+    void addFlow(Edge& e, T f) {
+        Edge &back = g[e.to][e.id];
+        if (!ec[e.to] && f) hs[H[e.to]].push_back(e.to);
+        e.f += f; e.c -= f; ec[e.to] += f;
+        back.f -= f; back.c += f; ec[back.to] -= f;
     }
     T max_flow(int s, int t) {
-        for (Edge <T> &e: edges) e.flow = 0;
-        max_level = 0;
-        for (int i = 0; i < n; ++i) lst[i].clear();
-        fill(level.begin(), level.end(), 0);
-        fill(excess.begin(), excess.end(), 0);
-        fill(cnt.begin(), cnt.end(), 0);
-        fill(active.begin(), active.end(), false);
-        for (int i = head[s]; i != -1; i = edges[i].nxt) excess[s] += edges[i].cap;
-        cnt[0] = n;
-        enqueue(s);
-        active[t] = true;
-        while (max_level >= 0) {
-            if (!lst[max_level].empty()) {
-                int u = lst[max_level].back();
-                lst[max_level].pop_back();
-                active[u] = false;
-                for (int i = head[u]; i != -1 && excess[u]; i = edges[i].nxt) {
-                    T d = min(excess[u], edges[i].cap - edges[i].flow);
-                    if (d && level[u] == level[edges[i].to] + 1) {
-                        edges[i].flow += d; edges[i ^ 1].flow -= d;
-                        excess[edges[i].to] += d; excess[u] -= d;
-                        enqueue(edges[i].to);
-                    }
-                }
-                if (excess[u]) {
-                    if (cnt[level[u]] == 1) {
-                        int k = level[u];
-                        for (int u = 0; u < n; ++u) if (level[u] >= k) {
-                            --cnt[level[u]];
-                            level[u] = n;
-                            ++cnt[level[u]];
-                            enqueue(u);
-                        }
-                    } else {
-                        --cnt[level[u]];
-                        level[u] = n;
-                        for (int i = head[u]; i != -1; i = edges[i].nxt)
-                            if (edges[i].cap != edges[i].flow) level[u] = min(level[u], level[edges[i].to] + 1);
-                        ++cnt[level[u]];
-                        enqueue(u);
-                    }
-                }
-            } else max_level--;
+        int v = g.size(); H[s] = v; ec[t] = 1;
+        vector<int> co(2*v); co[0] = v-1;
+        for (int i = 0; i < v; ++i) cur[i] = g[i].data();
+        for (Edge& e : g[s]) addFlow(e, e.c);
+        for (int hi = 0;;) {
+            while (hs[hi].empty()) if (!hi--) return -ec[s];
+            int u = hs[hi].back(); hs[hi].pop_back();
+            while (ec[u] > 0)  // discharge u
+                if (cur[u] == g[u].data() + (int) g[u].size()) {
+                    H[u] = 1e9;
+                    for (Edge& e : g[u]) if (e.c && H[u] > H[e.to]+1)
+                        H[u] = H[e.to]+1, cur[u] = &e;
+                    if (++co[H[u]], !--co[hi] && hi < v)
+                        for (int i = 0; i < v; ++i) if (hi < H[i] && H[i] < v)
+                            --co[H[i]], H[i] = v + 1;
+                    hi = H[u];
+                } else if (cur[u]->c && H[u] == H[cur[u]->to]+1)
+                    addFlow(*cur[u], min(ec[u], cur[u]->c));
+                else ++cur[u];
         }
-        return excess[t];
     }
+    bool leftOfMinCut(int a) { return H[a] >= (int)g.size(); }
 };
+
 template <class T> struct Dinic {
     static constexpr T inf = numeric_limits<T>::max();
     int n, ss, tt;
