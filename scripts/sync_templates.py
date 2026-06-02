@@ -5,8 +5,6 @@ from collections import OrderedDict
 from pathlib import Path
 import argparse
 import json
-import shutil
-import subprocess
 import tempfile
 import zipfile
 
@@ -21,7 +19,6 @@ PROFILE_FILES = [
     ROOT / "marvinthang_linux.code-profile",
     ROOT / "marvinthang_v2.code-profile",
 ]
-SUBLIME_RAR = ROOT / "Sublime Text.rar"
 SUBLIME_ZIP = ROOT / "Sublime Text.zip"
 
 SOURCE_MAP = OrderedDict(
@@ -168,8 +165,6 @@ def prepare_sublime_tree(tmp: Path) -> Path:
     if SUBLIME_ZIP.exists():
         with zipfile.ZipFile(SUBLIME_ZIP, "r") as archive:
             archive.extractall(tmp)
-    elif SUBLIME_RAR.exists() and shutil.which("unrar"):
-        subprocess.run(["unrar", "x", "-idq", str(SUBLIME_RAR), str(tmp)], check=True)
     else:
         (tmp / "Sublime Text" / "Packages" / "User").mkdir(parents=True)
     user_dir = tmp / "Sublime Text" / "Packages" / "User"
@@ -204,31 +199,12 @@ def write_sublime_zip_from_base(base: Path) -> None:
                 archive.write(path, Path("Sublime Text") / path.relative_to(base))
 
 
-def write_sublime_rar(tmp: Path) -> bool:
-    if not shutil.which("rar"):
-        return False
-    tmp_rar = ROOT / "Sublime Text.synced.rar"
-    if tmp_rar.exists():
-        tmp_rar.unlink()
-    subprocess.run(["rar", "a", "-r", "-ma5", str(tmp_rar), "Sublime Text"], cwd=tmp, check=True)
-    tmp_rar.replace(SUBLIME_RAR)
-    return True
-
-
-def update_extracted_sublime(base: Path) -> None:
-    user_dir = base / "Packages" / "User"
-    user_dir.mkdir(parents=True, exist_ok=True)
-    update_sublime_files(user_dir)
-    write_sublime_zip_from_base(base)
-
-
-def update_sublime(write_rar: bool) -> bool:
+def update_sublime() -> None:
     with tempfile.TemporaryDirectory(prefix="sublime-sync-") as name:
         tmp = Path(name)
         user_dir = prepare_sublime_tree(tmp)
         update_sublime_files(user_dir)
         write_sublime_zip_from_base(tmp / "Sublime Text")
-        return write_rar and write_sublime_rar(tmp)
 
 
 def check_current(snippets: OrderedDict) -> list[str]:
@@ -268,8 +244,6 @@ def check_current(snippets: OrderedDict) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sync editor templates from lib/.")
     parser.add_argument("--check", action="store_true", help="check sync without writing files")
-    parser.add_argument("--write-rar", action="store_true", help="also write a local Sublime Text.rar when rar is installed")
-    parser.add_argument("--sublime-dir", type=Path, help="update an extracted Sublime Text folder in place")
     args = parser.parse_args()
 
     snippets = build_vscode_snippets()
@@ -284,17 +258,8 @@ def main() -> int:
 
     write_vscode_snippets(snippets)
     update_profiles(snippets)
-    if args.sublime_dir:
-        update_extracted_sublime(args.sublime_dir)
-        rar_updated = False
-        print(f"synced VS Code snippets, profiles, {SUBLIME_ZIP.name}, and {args.sublime_dir}")
-    else:
-        rar_updated = update_sublime(args.write_rar)
-        print("synced VS Code snippets, profiles, and Sublime Text.zip")
-    if args.write_rar and rar_updated:
-        print("synced local Sublime Text.rar")
-    elif args.write_rar:
-        print("Sublime Text.rar was not rewritten because no rar binary is available")
+    update_sublime()
+    print("synced VS Code snippets, profiles, and Sublime Text.zip")
     return 0
 
 

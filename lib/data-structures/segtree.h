@@ -1,7 +1,7 @@
 template<
-    class T,        // data type for nodes
-    T (*op) (T, T), // operator to combine 2 nodes
-    T (*e)()        // identity element
+    class T,                          // data type for nodes
+    T (*op) (const T&, const T&),      // operator to combine 2 nodes
+    T (*e)()                          // identity element
     >
 struct SegTree {
     SegTree(): SegTree(0) {}
@@ -14,16 +14,31 @@ struct SegTree {
         for (int i = 0; i < n; ++i) d[size + i] = v[i];
         for (int i = size - 1; i > 0; --i) update(i);
     }
+    SegTree(vector <T>&& v) : n(v.size()) {
+        log = 0;
+        while ((1 << log) < n) ++log;
+        size = 1 << log;
+        d = vector<T>(size << 1, e());
+        for (int i = 0; i < n; ++i) d[size + i] = move(v[i]);
+        for (int i = size - 1; i > 0; --i) update(i);
+    }
 
     // 0 <= p < n
-    void set(int p, T x) {
+    void set(int p, const T &x) {
         assert(0 <= p && p < n);
         p += size; d[p] = x;
         for (int i = 1; i <= log; ++i) update(p >> i);
     }
 
     // 0 <= p < n
-    T get(int p) const {
+    void set(int p, T &&x) {
+        assert(0 <= p && p < n);
+        p += size; d[p] = move(x);
+        for (int i = 1; i <= log; ++i) update(p >> i);
+    }
+
+    // 0 <= p < n
+    const T& get(int p) const {
         assert(0 <= p && p < n);
         return d[p + size];
     }
@@ -43,12 +58,12 @@ struct SegTree {
         return op(sml, smr);
     }
 
-    T all_prod() const { return d[1]; }
+    const T& all_prod() const { return d[1]; }
 
     // Binary search on SegTree to find largest r:
     //    f(op(a[l] .. a[r-1])) = true   (assuming empty array is always true)
     //    f(op(a[l] .. a[r])) = false    (assuming op(..., a[n]), which is out of bound, is always false)
-    template <bool (*f)(T)> int max_right(int l) const { return max_right(l, [](T x) { return f(x); }); }
+    template <bool (*f)(const T&)> int max_right(int l) const { return max_right(l, [](const T &x) { return f(x); }); }
     template <class F> int max_right(int l, F f) const {
         assert(0 <= l && l <= n);
         assert(f(e()));
@@ -76,7 +91,7 @@ struct SegTree {
     // Binary search on SegTree to find smallest l:
     //    f(op(a[l] .. a[r-1])) = true      (assuming empty array is always true)
     //    f(op(a[l-1] .. a[r-1])) = false   (assuming op(a[-1], ..), which is out of bound, is always false)
-    template <bool (*f)(T)> int min_left(int r) const { return min_left(r, [](T x) { return f(x); }); }
+    template <bool (*f)(const T&)> int min_left(int r) const { return min_left(r, [](const T &x) { return f(x); }); }
     template <class F> int min_left(int r, F f) const {
         assert(0 <= r && r <= n);
         assert(f(e()));

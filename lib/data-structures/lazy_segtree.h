@@ -1,11 +1,11 @@
 template <
-    class S,                 // node data type
-    S (*op) (S, S),          // combine 2 nodes
-    S (*e) (),               // identity element
-    class F,                 // lazy propagation tag
-    S (*mapping) (F, S),     // apply tag F on a node
-    F (*composition) (F, F), // combine 2 tags
-    F (*id)()                // identity tag
+    class S,                              // node data type
+    S (*op) (const S&, const S&),         // combine 2 nodes
+    S (*e) (),                            // identity element
+    class F,                              // lazy propagation tag
+    void (*mapping) (const F&, S&),       // apply tag F on a node
+    void (*composition) (const F&, F&),   // combine 2 tags
+    F (*id)()                             // identity tag
     >
 struct LazySegTree {
     LazySegTree() : LazySegTree(0) {}
@@ -19,9 +19,18 @@ struct LazySegTree {
         for (int i = 0; i < n; ++i) d[i + size] = v[i];
         for (int i = size - 1; i > 0; --i) update(i);
     }
+    LazySegTree(vector <S> &&v) : n(v.size()) {
+        log = 0;
+        while ((1 << log) < n) ++log;
+        size = 1 << log;
+        d = vector<S>(size << 1, e());
+        lz = vector<F>(size, id());
+        for (int i = 0; i < n; ++i) d[i + size] = move(v[i]);
+        for (int i = size - 1; i > 0; --i) update(i);
+    }
 
     // 0 <= p < n
-    void set(int p, S x) {
+    void set(int p, const S &x) {
         assert(0 <= p && p < n);
         p += size;
         for (int i = log; i > 0; --i) push(p >> i);
@@ -30,7 +39,16 @@ struct LazySegTree {
     }
 
     // 0 <= p < n
-    S get(int p) {
+    void set(int p, S &&x) {
+        assert(0 <= p && p < n);
+        p += size;
+        for (int i = log; i > 0; --i) push(p >> i);
+        d[p] = move(x);
+        for (int i = 1; i <= log; ++i) update(p >> i);
+    }
+
+    // 0 <= p < n
+    const S& get(int p) {
         assert(0 <= p && p < n);
         p += size;
         for (int i = log; i > 0; --i) push(p >> i);
@@ -57,20 +75,20 @@ struct LazySegTree {
         return op(sml, smr);
     }
 
-    S all_prod() { return d[1]; }
+    const S& all_prod() { return d[1]; }
 
     // 0 <= p < n
-    void apply(int p, F f) {
+    void apply(int p, const F &f) {
         assert(0 <= p && p < n);
         p += size;
         for (int i = log; i > 0; --i) push(p >> i);
-        d[p] = mapping(f, d[p]);
+        mapping(f, d[p]);
         for (int i = 1; i <= log; ++i) update(p >> i);
     }
 
     // Apply f on all elements in range [l, r-1]
     // 0 <= l <= r <= n
-    void apply(int l, int r, F f) {
+    void apply(int l, int r, const F &f) {
         assert(0 <= l && l <= r && r <= n);
         if (l == r) return;
         l += size; r += size;
@@ -94,7 +112,7 @@ struct LazySegTree {
     // Binary search on SegTree to find largest r:
     //    f(op(a[l] .. a[r-1])) = true   (assuming empty array is always true)
     //    f(op(a[l] .. a[r])) = false    (assuming op(..., a[n]), which is out of bound, is always false)
-    template <bool (*g)(S)> int max_right(int l) { return max_right(l, [](S x) { return g(x); }); }
+    template <bool (*g)(const S&)> int max_right(int l) { return max_right(l, [](const S &x) { return g(x); }); }
     template <class G> int max_right(int l, G g) {
         assert(0 <= l && l <= n);
         assert(g(e()));
@@ -124,7 +142,7 @@ struct LazySegTree {
     // Binary search on SegTree to find smallest l:
     //    f(op(a[l] .. a[r-1])) = true      (assuming empty array is always true)
     //    f(op(a[l-1] .. a[r-1])) = false   (assuming op(a[-1], ..), which is out of bound, is always false)
-    template <bool (*g)(S)> int min_left(int r) { return min_left(r, [](S x) { return g(x); }); }
+    template <bool (*g)(const S&)> int min_left(int r) { return min_left(r, [](const S &x) { return g(x); }); }
     template <class G> int min_left(int r, G g) {
         assert(0 <= r && r <= n);
         assert(g(e()));
@@ -156,9 +174,9 @@ private:
     vector<S> d;
     vector<F> lz;
     void update(int k) { d[k] = op(d[k << 1], d[k << 1 | 1]); }
-    void all_apply(int k, F f) {
-        d[k] = mapping(f, d[k]);
-        if (k < size) lz[k] = composition(f, lz[k]);
+    void all_apply(int k, const F &f) {
+        mapping(f, d[k]);
+        if (k < size) composition(f, lz[k]);
     }
     void push(int k) {
         all_apply(k << 1, lz[k]);
