@@ -5,6 +5,15 @@ Competitive-programming templates, snippets, and editor profiles kept in sync wi
 ## Layout
 
 - `lib/`: C++ template source files.
+  - `core/`: starter template and debug helpers.
+  - `ds/`: data structures.
+  - `dp/`: dynamic-programming optimization helpers.
+  - `geometry/`: geometry templates.
+  - `graph/`: graph algorithms, with `flow/` and `tree/` subfolders.
+  - `grader/`: local testing and generator helpers.
+  - `math/`: number theory, algebra, and transforms.
+  - `misc/`: small utilities and language tricks.
+  - `string/`: string algorithms.
 - `marvinthang.code-snippets`: VS Code snippets generated from the library templates.
 - `marvinthang*.code-profile`: VS Code profiles with the same snippets embedded.
 - `Sublime Text.zip`: Sublime Text profile mirror generated from the current library templates.
@@ -31,4 +40,10 @@ Check whether generated files are already synced with:
 
 ```sh
 python3 scripts/sync_templates.py --check
+```
+
+Precompile the generator header locally to speed up repeated generator builds:
+
+```sh
+g++ -std=c++20 -I/home/marvinthang/projects/algorithm-library/lib -x c++-header lib/grader/generator_pch.h -o lib/grader/generator_pch.h.gch
 ```

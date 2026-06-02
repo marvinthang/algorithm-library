@@ -6,6 +6,7 @@
 *.so
 *.dylib
 *.a
+*.gch
 a.out
 
 # Competitive-programming generated files

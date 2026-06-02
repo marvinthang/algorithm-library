@@ -1,6 +1,4 @@
-#include "grader/testlib.h"
-#include "grader/gen_tree.h"
-#include <bits/stdc++.h>
+#include "grader/generator_pch.h"
 
 using namespace std;
 

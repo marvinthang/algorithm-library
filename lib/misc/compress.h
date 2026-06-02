@@ -1,0 +1,1 @@
+template <class InIter, class OutIter>  void compress(InIter first, InIter last, OutIter result) { vector <__typeof(*first)> v(first, last); sort(v.begin(), v.end()); v.erase(unique(v.begin(), v.end()), v.end()); while (first != last) { *result = lower_bound(v.begin(), v.end(), *first) - v.begin(); ++first; ++result; } }
