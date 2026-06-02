@@ -64,7 +64,7 @@ struct MaxFlow {
     }
 
     bool saturating(int s, int t) {
-        maxFlow(s, t);
+        getFlow(s, t);
         for (int &id: adj[s]) if (edges[id].from == s && !edges[id].saturating()) return false;
         return true;
     }

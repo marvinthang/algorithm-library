@@ -9,17 +9,15 @@ using namespace std;
 
 #define             fi  first
 #define             se  second
-#define           left  ___left___
-#define          right  ___right___
 #define   scan_op(...)  istream & operator >> (istream &in, __VA_ARGS__ &u)
 #define  print_op(...)  ostream & operator << (ostream &out, const __VA_ARGS__ &u)
 #define     file(name)  if (fopen(name".inp", "r")) { freopen(name".inp", "r", stdin); freopen(name".out", "w", stdout); }
 #ifdef LOCAL
-    #include "debug.h"
+	#include "debug.h"
 #else
-    #define DB(...)
-    #define db(...) ""
-    #define debug(...)
+	#define DB(...)
+	#define db(...) ""
+	#define debug(...)
 #endif
 
 namespace std {
@@ -37,7 +35,7 @@ template <class Fun> decltype(auto)y_combinator(Fun &&fun) { return y_combinator
 template <typename T, int D> struct Vec: public vector <Vec<T, D - 1>> { static_assert(D >= 1, "Vector dimension must be greater than zero!"); template <typename ...Args> Vec(int n = 0, Args ...args): vector <Vec<T, D - 1>>(n, Vec<T, D - 1>(args...)) {} };
 template <typename T> struct Vec<T, 1>: public vector<T>{ Vec(int n = 0, const T &val = T()): vector<T>(n, val) {} };
 #if __cplusplus < 202002L
-	template <class T> int ssize(const T& a) { return a.size(); }
+	template <class T> int ssize(const T &a) { return a.size(); }
 #endif
 }
 

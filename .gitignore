@@ -1,0 +1,40 @@
+# C++ build artifacts
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+a.out
+
+# Competitive-programming generated files
+*.inp
+*.out
+*.ans
+*.log
+*.tmp
+
+# Coverage and debug output
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+
+# Python/cache files used by local scripts
+__pycache__/
+*.py[cod]
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+*.code-workspace
+
+# Stale local archive backup; use the synced ZIP in the repo.
+Sublime Text.rar
+
+# Local build folders
+build/
+dist/
+tmp/

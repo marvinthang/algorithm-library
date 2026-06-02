@@ -15,7 +15,7 @@ vector <Node> nodes;
 
 void addString(const string &s) {
     int p = 0;
-    REP(i, s.size()) {
+    for (int i = 0; i < (int) s.size(); ++i) {
         int c = s[i] - 'a';
         if (!~nodes[p].children[c]) {
             nodes[p].children[c] = nodes.size();

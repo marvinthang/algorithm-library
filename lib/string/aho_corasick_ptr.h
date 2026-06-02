@@ -17,7 +17,7 @@ Node *root;
  
 void addString(const string &s) {
     Node *p = root;
-    REP(i, s.size()) {
+    for (int i = 0; i < (int) s.size(); ++i) {
         int c = s[i] - 'a';
         if (p->children[c] == nullptr) p->children[c] = new Node(p, c);
         p = p->children[c];

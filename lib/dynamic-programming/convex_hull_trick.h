@@ -1,6 +1,6 @@
 struct Line {
     long long a, b;
-    Line(long long a = 0, long long b = INF): a(a), b(b) {}
+    Line(long long a = 0, long long b = numeric_limits<long long>::max() / 4): a(a), b(b) {}
     long long eval(long long x) { return a * x + b; }
 };
 struct ConvexHullTrick {

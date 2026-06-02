@@ -1,8 +1,8 @@
 struct Point {
     long long x, y;
     Point(long long x = 0, long long y = 0): x(x), y(y) {}
-    friend scan_op(Point) { return in >> u.x >> u.y; }
-    friend print_op(Point) { return out << make_pair(u.x, u.y); }
+    friend istream & operator >> (istream &in, Point &u) { return in >> u.x >> u.y; }
+    friend ostream & operator << (ostream &out, const Point &u) { return out << '(' << u.x << ", " << u.y << ')'; }
     bool operator == (const Point &other) const { return x == other.x && y == other.y; }
     bool operator < (const Point &other) const { return make_pair(x, y) < make_pair(other.x, other.y); }
     Point & operator += (const Point &other) {x += other.x; y += other.y; return *this; }
