@@ -40,12 +40,12 @@ template <typename T> struct Vec<T, 1>: public vector<T>{ Vec(int n = 0, const T
 }
 
 void process(void) {
-	
+	// __SNIPPET_CURSOR__
 }
 
 int main(void) {
 	ios_base::sync_with_stdio(false); cin.tie(nullptr);
-	file("${file_name}");
+	file("${TM_FILENAME_BASE}");
 	// int t; cin >> t; while (t--)
 	process();
 	return (0^0);

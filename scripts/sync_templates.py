@@ -113,7 +113,17 @@ SUBLIME_BUILD_REPLACEMENTS = {
 
 
 def read_source_lines(name: str, mode: str) -> list[str]:
-    return (LIB / SOURCE_MAP[name]).read_text().splitlines()
+    lines = (LIB / SOURCE_MAP[name]).read_text().splitlines()
+    if name == "START":
+        lines = ["\t$0" if line.strip() == "// __SNIPPET_CURSOR__" else line for line in lines]
+        if mode == "vscode":
+            lines = [
+                "*    created: ${CURRENT_DATE}.${CURRENT_MONTH}.${CURRENT_YEAR} ${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}    *"
+                if line == "*    created: dd.mm.yyyy HH:MM:SS    *"
+                else line
+                for line in lines
+            ]
+    return lines
 
 
 def build_vscode_snippets() -> OrderedDict:
