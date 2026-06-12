@@ -10,20 +10,23 @@ template <class T> struct Matrix {
     Matrix(const vector <vector <T>> &d) {
         numRow = d.size();
         numCol = numRow ? d[0].size() : 0;
+        val.reserve(numRow * numCol);
         for (int i = 0; i < numRow; ++i) {
             assert((int) d[i].size() == numCol);
             copy(d[i].begin(), d[i].end(), back_inserter(val));
         }
     }
     Matrix & set_value(T v) {
-        for (int i = 0; i < numRow * numCol; ++i) val[i] = v;
+        fill(val.begin(), val.end(), v);
         return *this;
     }
     // convert to 2D vector
     vector <vector <T>> vecvec(void) const {
         vector <vector <T>> res(numRow);
-        for (int i = 0; i < numRow; ++i)
+        for (int i = 0; i < numRow; ++i) {
+            res[i].reserve(numCol);
             copy(val.begin() + i * numCol, val.begin() + (i + 1) * numCol, back_inserter(res[i]));
+        }
         return res;
     }
     operator vector <vector <T>> () const { return vecvec(); }
@@ -38,23 +41,22 @@ template <class T> struct Matrix {
     }
     friend ostream & operator << (ostream &out, const Matrix &res) {
         for (int i = 0; i < res.numRow * res.numCol; ++i)
-            cout << res.val[i] << " \n"[i % res.numCol == res.numCol - 1];
+            out << res.val[i] << " \n"[i % res.numCol == res.numCol - 1];
         return out;
     }
-    Matrix operator - (void) {
+    Matrix operator - (void) const {
         Matrix res(numRow, numCol);
         for (int i = 0; i < numRow * numCol; ++i) res.val[i] = -val[i];
         return res;
     }
-    Matrix operator * (const T &v) {
+    Matrix operator * (const T &v) const {
         Matrix res = *this;
         for (T &x: res.val) x *= v;
         return res;
-    } 
-    Matrix operator / (const T &v) {
+    }
+    Matrix operator / (const T &v) const {
         Matrix res = *this;
-        const T inv = T(1) / v;
-        for (T &x: res.val) x *= inv;
+        for (T &x: res.val) x /= v;
         return res;
     }
     Matrix operator + (const Matrix &other) const {
@@ -74,17 +76,40 @@ template <class T> struct Matrix {
     Matrix operator * (const Matrix &other) const {
         int M = numRow, N = numCol, P = other.numCol;
         assert(N == other.numRow);
-        Matrix t_other = other.transpose();
+
         Matrix res(M, P);
-        for (int i = 0; i < M; ++i)
-            for (int j = 0; j < P; ++j)
-                res.at(i, j) = inner_product(this->val.begin() + N * i, this->val.begin() + N * (i + 1), t_other.val.begin() + t_other.numCol * j, T(0));
+        if (!M || !N || !P) return res;
+        for (int i = 0; i < M; ++i) {
+            T *resRow = res.val.data() + i * P;
+            const T *aRow = this->val.data() + i * N;
+            for (int k = 0; k < N; ++k) {
+                T a = aRow[k];
+                const T *bRow = other.val.data() + k * P;
+                for (int j = 0; j < P; ++j) resRow[j] += a * bRow[j];
+            }
+        }
         return res;
     }
-    Matrix & operator *= (const T &v) { return *this = *this * v; }
-    Matrix & operator /= (const T &v) { return *this = *this / v; }
-    Matrix & operator += (const Matrix &other) { return *this = *this + other; }
-    Matrix & operator -= (const Matrix &other) { return *this = *this - other; }
+    Matrix & operator *= (const T &v) {
+        for (T &x: val) x *= v;
+        return *this;
+    }
+    Matrix & operator /= (const T &v) {
+        for (T &x: val) x /= v;
+        return *this;
+    }
+    Matrix & operator += (const Matrix &other) {
+        int M = numRow, N = numCol;
+        assert(M == other.numRow); assert(N == other.numCol);
+        for (int i = 0; i < M * N; ++i) val[i] += other.val[i];
+        return *this;
+    }
+    Matrix & operator -= (const Matrix &other) {
+        int M = numRow, N = numCol;
+        assert(M == other.numRow); assert(N == other.numCol);
+        for (int i = 0; i < M * N; ++i) val[i] -= other.val[i];
+        return *this;
+    }
     Matrix & operator *= (const Matrix &other) { return *this = *this * other; }
     Matrix pow(long long Exp) const {
         int M = numRow;
