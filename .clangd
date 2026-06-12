@@ -1,0 +1,12 @@
+CompileFlags:
+  Add:
+    - -std=c++20
+    - -I/home/marvinthang/projects/algorithm-library/lib
+    - -include
+    - /home/marvinthang/projects/algorithm-library/.vscode/cp_lint_prelude.h
+---
+If:
+  PathMatch: lib/grader/(testlib.*|generator(_pch)?|gen_tree)\.h
+CompileFlags:
+  Add:
+    - -DCP_LINT_NO_USING_NAMESPACE_STD
